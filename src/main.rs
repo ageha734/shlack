@@ -39,12 +39,7 @@ fn main() {
             println!("{}: {}", &channel, &complete_text);
         }
 
-        let msg = send::Msg {
-            text: complete_text,
-            channel: channel,
-        };
-
-        if let Err(error) = send::send(msg) {
+        if let Err(error) = send::send(&complete_text, &channel) {
             if verbose {
                 println!("{}", error);
             }
