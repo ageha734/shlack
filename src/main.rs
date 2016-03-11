@@ -11,7 +11,7 @@ fn main() {
     let mut input = String::new();
     if let Ok(_) = io::stdin().read_line(&mut input) {
         if let Ok(_) = run_command(input) {
-            return exit(1)
+            return exit(0)
         }
     }
     exit(1)
