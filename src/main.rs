@@ -48,7 +48,12 @@ fn main() {
             channel: channel,
         };
 
-        let sender = send::Sender::new(RtmClient::new("token"));
-        sender.send(msg);
+        let token = "xoxp-11118560705-11114969687-17074931648-82542c337c";
+        let mut sender = send::Sender::new(RtmClient::new(token));
+        if let Err(error) = sender.send(msg) {
+            if verbose {
+                println!("{}", error);
+            }
+        }
     };
 }
