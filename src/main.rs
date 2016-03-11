@@ -9,17 +9,12 @@ use std::process::exit;
 
 fn main() {
     let mut input = String::new();
-    match io::stdin().read_line(&mut input) {
-        Ok(_) => {
-            match run_command(input) {
-                Ok(_) => exit(0),
-                Err(_) => exit(1),
-            }
-        },
-        Err(_) => {
-            exit(1)
+    if let Ok(_) = io::stdin().read_line(&mut input) {
+        if let Ok(_) = run_command(input) {
+            return exit(1)
         }
     }
+    exit(1)
 }
 
 fn run_command(input: String) -> Result<(), ()> {
