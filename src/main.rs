@@ -3,13 +3,9 @@ extern crate slack;
 
 pub mod send;
 
-use std::env;
 use std::io;
 
 use argparse::{ArgumentParser, StoreTrue, Store};
-use slack::RtmClient;
-
-use send::{Msg, Sender};
 
 fn main() {
     let mut input = String::new();
@@ -48,9 +44,7 @@ fn main() {
             channel: channel,
         };
 
-        let token = "xoxp-11118560705-11114969687-17074931648-82542c337c";
-        let mut sender = send::Sender::new(RtmClient::new(token));
-        if let Err(error) = sender.send(msg) {
+        if let Err(error) = send::send(msg) {
             if verbose {
                 println!("{}", error);
             }

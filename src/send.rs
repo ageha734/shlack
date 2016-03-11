@@ -1,42 +1,31 @@
-use slack::RtmClient;
+use slack;
 
 pub struct Msg {
     pub text: String,
     pub channel: String,
 }
 
-pub struct Sender {
-    client: RtmClient,
+pub fn send(msg: Msg) -> Result<(), String> {
+    let token = "xoxp-11118560705-11114969687-17074931648-82542c337c";
+    let mut client = slack::RtmClient::new(token);
+    client.login();
+
+    match find_recipient(&client, &msg) {
+        Some(rec) => {
+            if let Err(error) = client.post_message(
+                &format!("#{}", rec), &msg.text.clone(), None) {
+                    println!("{}", error);
+                };
+            Ok(())
+        },
+        None => Err("channel does not exist".to_string()),
+    }
 }
 
-impl Sender {
-    pub fn new(client: RtmClient) -> Sender {
-        Sender { client: client }
-    }
-
-    pub fn send(&mut self, msg: Msg) -> Result<(), String> {
-        self.client.login();
-
-        match self.find_channel_id(&msg) {
-            Some(chan) => {
-                if let Err(error) =
-                    self.client.post_message(
-                        &format!("#{}", chan), &msg.text.clone(), None) {
-                        println!("{}", error);
-                    };
-                Ok(())
-            },
-            None => {
-                Err("channel does not exist".to_string())
-            }
-        }
-    }
-
-    fn find_channel_id(&self, msg: &Msg) -> Option<String> {
-        self.client
-            .get_channels()
-            .iter()
-            .find(|channel| channel.name == msg.channel.to_owned())
-            .map(|channel| channel.name.clone())
-    }
+fn find_recipient(client: &slack::RtmClient, msg: &Msg) -> Option<String> {
+    client
+        .get_channels()
+        .iter()
+        .find(|channel| channel.name == msg.channel.to_owned())
+        .map(|channel| channel.name.clone())
 }
