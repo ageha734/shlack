@@ -12,8 +12,10 @@ fn main() {
     let mut input = String::new();
     match io::stdin().read_line(&mut input) {
         Ok(_) => {
-            run_command(input);
-            exit(0)
+            match run_command(input) {
+                Ok(_) => exit(0),
+                Err(_) => exit(1),
+            }
         },
         Err(_) => {
             exit(1)
@@ -21,7 +23,7 @@ fn main() {
     }
 }
 
-fn run_command(input: String) {
+fn read_args() -> (bool, String, String, String) {
     let mut verbose = false;
     let mut channel = "slackbot".to_string();
     let mut prepend = "".to_string();
@@ -45,16 +47,22 @@ fn run_command(input: String) {
         ap.parse_args_or_exit();
     }
 
-    let complete_text = format!("{}{}{}", prepend, input.trim(),
-                                append);
+    (verbose, channel, prepend, append)
+}
 
+fn run_command(input: String) -> Result<(), ()> {
+    let (verbose, channel, prepend, append) = read_args();
+
+    let text = format!("{}{}{}", prepend, input, append);
     if verbose {
-        println!("{}: {}", &channel, &complete_text);
+        println!("{}: {}", &channel, &text);
     }
 
-    if let Err(error) = send::send(&complete_text, &channel) {
-        if verbose {
-            println!("{}", error);
+    match send::send(&text, &channel) {
+        Ok(_) => Ok(()),
+        Err(e) => {
+            if verbose { println!("{}", e) }
+            Err(())
         }
     }
 }
