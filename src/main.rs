@@ -1,12 +1,11 @@
 extern crate argparse;
 extern crate slack;
 
+pub mod read;
 pub mod send;
 
 use std::io;
 use std::process::exit;
-
-use argparse::{ArgumentParser, StoreTrue, Store};
 
 fn main() {
     let mut input = String::new();
@@ -23,45 +22,18 @@ fn main() {
     }
 }
 
-fn read_args() -> (bool, String, String, String) {
-    let mut verbose = false;
-    let mut channel = "slackbot".to_string();
-    let mut prepend = "".to_string();
-    let mut append = "".to_string();
-
-    {
-        let mut ap = ArgumentParser::new();
-        ap.set_description("Pipe text into Slack.");
-        ap.refer(&mut verbose)
-            .add_option(&["-v", "--verbose"], StoreTrue,
-                        "Be verbose");
-        ap.refer(&mut channel)
-            .add_option(&["-c", "--channel"], Store,
-                        "Channel to send message to");
-        ap.refer(&mut prepend)
-            .add_option(&["-p", "--prepend"], Store,
-                        "Text to prepend to input on message");
-        ap.refer(&mut append)
-            .add_option(&["-a", "--append"], Store,
-                        "Text to append to input on message");
-        ap.parse_args_or_exit();
-    }
-
-    (verbose, channel, prepend, append)
-}
-
 fn run_command(input: String) -> Result<(), ()> {
-    let (verbose, channel, prepend, append) = read_args();
+    let args = read::read_args();
 
-    let text = format!("{}{}{}", prepend, input, append);
-    if verbose {
-        println!("{}: {}", &channel, &text);
-    }
+    let text = format!("{}{}{}",
+                       args.prepend.clone(),
+                       input,
+                       args.append.clone());
 
-    match send::send(&text, &channel) {
+    match send::send(&text, &args.channel) {
         Ok(_) => Ok(()),
         Err(e) => {
-            if verbose { println!("{}", e) }
+            if args.verbose { println!("{}", e) }
             Err(())
         }
     }
