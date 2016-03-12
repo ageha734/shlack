@@ -14,6 +14,9 @@ $ hub pull-request | shlack -c general
 ```
 
 For now, you need to clone the repo and have Rust installed to use this.
+
+Clone the repo and add your token in send::send.
+
 ```sh
 $ cargo build
 $ echo hi | target/debug/shlack -v
