@@ -1,10 +1,31 @@
 use argparse::{ArgumentParser, StoreTrue, Store};
 
+use std::env;
+use std::io;
+
 pub struct Args {
     pub verbose: bool,
     pub channel: String,
     pub prepend: String,
     pub append: String,
+}
+
+pub struct Token(pub String);
+
+pub fn get_or_set_token() -> Result<Token, String> {
+    let key = "SLACK_TOKEN";
+    match env::var(&key) {
+        Ok(token) => Ok(Token(token)),
+        Err(_) => {
+            println!("slack API token: ");
+            let mut token = String::new();
+            try!(io::stdin()
+                 .read_line(&mut token)
+                 .map_err(|_| "error reading input"));
+            env::set_var(&key, &token);
+            Ok(Token(token))
+        },
+    }
 }
 
 pub fn read_args() -> Args {

@@ -1,7 +1,6 @@
 use slack;
 
-pub fn send(text: &str, channel: &str) -> Result<(), String> {
-    let token = "";
+pub fn send(text: &str, channel: &str, token: &str) -> Result<(), String> {
     let mut client = slack::RtmClient::new(token);
     try!(client.login().map_err(|_| "unable to login to slack".to_string()));
 

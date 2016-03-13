@@ -19,13 +19,18 @@ fn main() {
 
 fn run_command(input: String) -> Result<(), ()> {
     let args = read::read_args();
-
+    let token = match read::get_or_set_token() {
+        Ok(read::Token(token)) => token,
+        Err(e) => {
+            if args.verbose { println!("{}", e) }
+            return Err(())
+        }
+    };
     let text = format!("{}{}{}",
                        args.prepend.clone(),
                        input,
                        args.append.clone());
-
-    match send::send(&text, &args.channel) {
+    match send::send(&text, &args.channel, &token) {
         Ok(_) => Ok(()),
         Err(e) => {
             if args.verbose { println!("{}", e) }
