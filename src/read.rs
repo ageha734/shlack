@@ -42,7 +42,7 @@ pub fn read_args() -> Args {
                         "Be verbose");
         ap.refer(&mut channel)
             .add_option(&["-c", "--channel"], Store,
-                        "Channel to send message to");
+                        "Channel to send to");
         ap.refer(&mut prepend)
             .add_option(&["-p", "--prepend"], Store,
                         "Text to prepend to input on message");

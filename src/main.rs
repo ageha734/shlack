@@ -30,7 +30,8 @@ fn run_command(input: String) -> Result<(), ()> {
                        args.prepend.clone(),
                        input,
                        args.append.clone());
-    match send::send(&text, &args.channel, &token) {
+    let msg = send::Msg::new(text, args.channel.clone(), token);
+    match send::send(msg) {
         Ok(_) => Ok(()),
         Err(e) => {
             if args.verbose { println!("{}", e) }
