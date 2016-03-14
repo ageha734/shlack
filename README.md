@@ -7,15 +7,17 @@ Some cool use cases
 $ echo "anyone wanna grab lunch? :thumbsup:" | shlack -c random
 ```
 ```sh
-$ gist < file.json | shlack -c general -p "@matt: "
+$ gist < file.json | shlack -c luke
 ```
 ```sh
 $ hub pull-request | shlack -c general
 ```
 
 For now, you need to clone the repo and have Rust installed to use this.
+And you need to pass in the token on each call with `-t TOKEN`.
+You can get a token here: https://api.slack.com/docs/oauth-test-tokens
 
-Clone the repo and add your token in send::send.
+Clone the repo and run this:
 
 ```sh
 $ cargo build
@@ -28,6 +30,7 @@ $ echo hi | target/debug/shlack -v
 -c --channel
 -p --prepend
 -a --append
+-t --token
 ```
 
 ### TODO:
