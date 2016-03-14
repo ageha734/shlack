@@ -4,12 +4,14 @@ extern crate slack;
 pub mod read;
 pub mod send;
 
-use std::io;
+use std::io::{self, BufRead};
 use std::process::exit;
 
 fn main() {
     let mut input = String::new();
-    if let Ok(_) = io::stdin().read_line(&mut input) {
+    let stdin = io::stdin();
+    let mut handle = stdin.lock();
+    if let Ok(_) = handle.read_line(&mut input) {
         if let Ok(_) = run_command(input) {
             return exit(0)
         }
@@ -19,7 +21,7 @@ fn main() {
 
 fn run_command(input: String) -> Result<(), ()> {
     let args = read::read_args();
-    let token = match read::get_or_set_token() {
+    let token = match read::get_token() {
         Ok(read::Token(token)) => token,
         Err(e) => {
             if args.verbose { println!("{}", e) }
