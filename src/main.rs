@@ -1,11 +1,14 @@
 extern crate argparse;
 extern crate slack;
 
+pub mod msg;
 pub mod read;
-pub mod send;
 
 use std::io::{self, BufRead};
 use std::process::exit;
+
+use msg::Msg;
+use read::Token;
 
 fn main() {
     let mut input = String::new();
@@ -22,7 +25,7 @@ fn main() {
 fn run_command(input: String) -> Result<(), ()> {
     let args = read::read_args();
     let token = match read::get_token() {
-        Ok(read::Token(token)) => token,
+        Ok(Token(token)) => token,
         Err(e) => {
             if args.verbose { println!("{}", e) }
             return Err(())
@@ -32,8 +35,7 @@ fn run_command(input: String) -> Result<(), ()> {
                        args.prepend.clone(),
                        input,
                        args.append.clone());
-    let msg = send::Msg::new(text, args.channel.clone(), token);
-    match send::send(msg) {
+    match Msg::new(text, args.channel.clone(), token).send() {
         Ok(_) => Ok(()),
         Err(e) => {
             if args.verbose { println!("{}", e) }
