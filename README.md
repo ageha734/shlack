@@ -3,13 +3,13 @@
 A command line utility to pipe text into Slack messages.
 
 ```sh
-$ echo "anyone wanna grab lunch? :thumbsup:" | shlack -c random
+$ echo "anyone wanna grab lunch? :thumbsup:" | shlack random
 ```
 ```sh
-$ gist < file.json | shlack -c luke
+$ gist < file.json | shlack luke
 ```
 ```sh
-$ hub pull-request | shlack -c general
+$ hub pull-request | shlack general
 ```
 
 ### Install:
@@ -23,7 +23,6 @@ This sends a message to Slackbot.
 ### Commands:
 ```
 -v --verbose
--c --channel
 -p --prepend
 -a --append
 ```

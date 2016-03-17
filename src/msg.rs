@@ -30,8 +30,7 @@ impl Msg {
         Ok(())
     }
 
-    fn find_addr<T: HasName + HasId>(&self, recipients: Vec<T>)
-            -> Option<String> {
+    fn find_addr<T: HasName + HasId>(&self, recipients: Vec<T>) -> Option<String> {
         recipients
             .iter()
             .find(|x| x.name() == self.channel)

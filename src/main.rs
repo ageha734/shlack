@@ -29,12 +29,9 @@ fn run_command(input: String) -> Result<(), ()> {
         Err(e) => {
             if args.verbose { println!("{}", e) }
             return Err(())
-        }
+        },
     };
-    let text = format!("{}{}{}",
-                       args.prepend.clone(),
-                       input,
-                       args.append.clone());
+    let text = format!("{}{}{}", args.prepend.clone(), input, args.append.clone());
     match Msg::new(text, args.channel.clone(), token).send() {
         Ok(_) => Ok(()),
         Err(e) => {
