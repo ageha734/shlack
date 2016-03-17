@@ -8,7 +8,7 @@ use std::io::{self, BufRead};
 use std::process::exit;
 
 use msg::Msg;
-use read::Token;
+use read::{Args, Token};
 
 fn main() {
     let mut input = String::new();
@@ -23,8 +23,8 @@ fn main() {
 }
 
 fn run_command(input: String) -> Result<(), ()> {
-    let args = read::read_args();
-    let token = match read::get_token() {
+    let args = Args::read();
+    let token = match Token::get() {
         Ok(Token(token)) => token,
         Err(e) => {
             if args.verbose { println!("{}", e) }
