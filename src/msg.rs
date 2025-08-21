@@ -133,14 +133,16 @@ impl Msg {
 
         let start_response = client.start_response();
 
-        let addr = self.find_addr(start_response.channels.as_ref().unwrap_or(&vec![]))
-                        .or_else(|| self.find_addr(start_response.users.as_ref().unwrap_or(&vec![])))
-                        .or_else(|| self.find_addr(start_response.groups.as_ref().unwrap_or(&vec![])))
-                        .ok_or("unable to find channel".to_string())?;
+        let addr = self
+            .find_addr(start_response.channels.as_ref().unwrap_or(&vec![]))
+            .or_else(|| self.find_addr(start_response.users.as_ref().unwrap_or(&vec![])))
+            .or_else(|| self.find_addr(start_response.groups.as_ref().unwrap_or(&vec![])))
+            .ok_or("unable to find channel".to_string())?;
 
-        client.sender()
-             .send_message(&addr, &self.text)
-             .map_err(|_| "unable to send message".to_string())?;
+        client
+            .sender()
+            .send_message(&addr, &self.text)
+            .map_err(|_| "unable to send message".to_string())?;
         Ok(())
     }
 

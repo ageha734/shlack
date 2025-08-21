@@ -1,4 +1,4 @@
-use argparse::{ArgumentParser, StoreTrue, Store};
+use argparse::{ArgumentParser, Store, StoreTrue};
 
 use std::env;
 
@@ -23,10 +23,16 @@ impl Args {
                 .add_argument("channel", Store, "Channel to send to");
             ap.refer(&mut verbose)
                 .add_option(&["-v", "--verbose"], StoreTrue, "Be verbose");
-            ap.refer(&mut prepend)
-                .add_option(&["-p", "--prepend"], Store, "Text to prepend to input on message");
-            ap.refer(&mut append)
-                .add_option(&["-a", "--append"], Store, "Text to append to input on message");
+            ap.refer(&mut prepend).add_option(
+                &["-p", "--prepend"],
+                Store,
+                "Text to prepend to input on message",
+            );
+            ap.refer(&mut append).add_option(
+                &["-a", "--append"],
+                Store,
+                "Text to append to input on message",
+            );
             ap.parse_args_or_exit();
         }
 

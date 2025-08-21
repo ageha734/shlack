@@ -33,4 +33,4 @@
 
 pub mod msg;
 
-pub use msg::{Msg, HasId, HasName};
+pub use msg::{HasId, HasName, Msg};

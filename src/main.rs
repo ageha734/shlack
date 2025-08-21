@@ -27,15 +27,19 @@ fn run_command(input: String) -> Result<(), ()> {
     let token = match Token::get() {
         Ok(Token(token)) => token,
         Err(e) => {
-            if args.verbose { println!("{}", e) }
-            return Err(())
-        },
+            if args.verbose {
+                println!("{}", e)
+            }
+            return Err(());
+        }
     };
     let text = format!("{}{}{}", args.prepend.clone(), input, args.append.clone());
     match Msg::new(text, args.channel.clone(), token).send() {
         Ok(_) => Ok(()),
         Err(e) => {
-            if args.verbose { println!("{}", e) }
+            if args.verbose {
+                println!("{}", e)
+            }
             Err(())
         }
     }

@@ -1,4 +1,4 @@
-use shlack::{Msg, HasId, HasName};
+use shlack::{HasId, HasName, Msg};
 
 #[test]
 fn test_msg_new() {
@@ -80,12 +80,10 @@ fn test_find_addr_with_no_matching_channel() {
         }
     }
 
-    let channels = vec![
-        MockChannel {
-            id: Some("C123456".to_string()),
-            name: Some("general".to_string()),
-        },
-    ];
+    let channels = vec![MockChannel {
+        id: Some("C123456".to_string()),
+        name: Some("general".to_string()),
+    }];
 
     let result = msg.find_addr(&channels);
     assert_eq!(result, None);
