@@ -16,7 +16,7 @@ fn main() {
     let mut handle = stdin.lock();
     if let Ok(_) = handle.read_line(&mut input) {
         if let Ok(_) = run_command(input) {
-            return exit(0)
+            exit(0)
         }
     }
     exit(1)

@@ -1,8 +1,17 @@
 [package]
 name = "shlack"
 version = "0.1.0"
-authors = ["Vignesh Mohankumar <vignesh@vigneshmohankumar.com>"]
+authors = ["ageha734 <contact@ageha734.jp>"]
+edition = "2021"
+description = "A Slack messaging client written in Rust"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/ageha734/shlack"
+homepage = "https://github.com/ageha734/shlack"
+documentation = "https://docs.rs/shlack"
+readme = "README.md"
+keywords = ["slack", "messaging", "cli", "api"]
+categories = ["command-line-utilities", "api-bindings"]
 
 [dependencies]
-argparse = "*"
-slack = "0.13.0"
+argparse = "0.2.2"
+slack = "0.25.0"
