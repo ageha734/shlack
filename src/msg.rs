@@ -46,9 +46,9 @@ impl Msg {
     /// ```
     pub fn new(text: String, channel: String, token: String) -> Msg {
         Msg {
-            text: text,
-            channel: channel,
-            token: token,
+            text,
+            channel,
+            token,
         }
     }
 

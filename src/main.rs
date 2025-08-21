@@ -14,10 +14,8 @@ fn main() {
     let mut input = String::new();
     let stdin = io::stdin();
     let mut handle = stdin.lock();
-    if let Ok(_) = handle.read_line(&mut input) {
-        if let Ok(_) = run_command(input) {
-            exit(0)
-        }
+    if handle.read_line(&mut input).is_ok() && run_command(input).is_ok() {
+        exit(0)
     }
     exit(1)
 }

@@ -37,10 +37,10 @@ impl Args {
         }
 
         Args {
-            verbose: verbose,
-            channel: channel,
-            prepend: prepend,
-            append: append,
+            verbose,
+            channel,
+            prepend,
+            append,
         }
     }
 }
@@ -50,8 +50,8 @@ pub struct Token(pub String);
 impl Token {
     pub fn get() -> Result<Token, String> {
         let token_var = "SLACK_TOKEN";
-        env::var(&token_var)
-            .map(|t| Token(t))
+        env::var(token_var)
+            .map(Token)
             .map_err(|_| format!("environment variable {} not found", token_var))
     }
 }
