@@ -88,6 +88,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     needs: [check_version]
     if: needs.check_version.outputs.should_release == 'true'
+    timeout-minutes: 30
     strategy:
       matrix:
         include:
@@ -122,6 +123,17 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
         with:
           targets: ${{ matrix.target }}
+      - name: Cache cargo dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-${{ matrix.target }}-cargo-build-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-${{ matrix.target }}-cargo-build-
+            ${{ runner.os }}-cargo-build-
       - if: matrix.target == 'aarch64-unknown-linux-gnu'
         name: Install cross-compilation tools
         run: |
@@ -139,7 +151,18 @@ jobs:
           CXX_aarch64_unknown_linux_gnu: aarch64-linux-gnu-g++
           AR_aarch64_unknown_linux_gnu: aarch64-linux-gnu-ar
           CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER: aarch64-linux-gnu-gcc
+          CARGO_INCREMENTAL: 0
+          CARGO_NET_RETRY: 10
+          RUSTFLAGS: "-C target-cpu=native"
         run: cargo build --release --target ${{ matrix.target }}
+      - name: Rename binary
+        shell: bash
+        run: |
+          if [[ "${{ matrix.os }}" == "windows-latest" ]]; then
+            cp target/${{ matrix.target }}/release/shlack.exe target/${{ matrix.target }}/release/${{ matrix.binary_name }}
+          else
+            cp target/${{ matrix.target }}/release/shlack target/${{ matrix.target }}/release/${{ matrix.binary_name }}
+          fi
       - name: Upload Binary as Artifact
         uses: actions/upload-artifact@v4
         with:
