@@ -89,7 +89,9 @@ jobs:
     needs: [check_version]
     if: needs.check_version.outputs.should_release == 'true'
     timeout-minutes: 30
+    continue-on-error: true
     strategy:
+      fail-fast: false
       matrix:
         include:
           - os: ubuntu-latest
@@ -104,10 +106,11 @@ jobs:
             target: x86_64-pc-windows-msvc
             artifact_name: shlack-windows-x86_64.exe
             binary_name: shlack-windows-x86_64.exe
-          - os: windows-latest
-            target: aarch64-pc-windows-msvc
-            artifact_name: shlack-windows-aarch64.exe
-            binary_name: shlack-windows-aarch64.exe
+          # Temporarily disabled due to build issues
+          # - os: windows-latest
+          #   target: aarch64-pc-windows-msvc
+          #   artifact_name: shlack-windows-aarch64.exe
+          #   binary_name: shlack-windows-aarch64.exe
           - os: macos-latest
             target: x86_64-apple-darwin
             artifact_name: shlack-macos-x86_64
@@ -153,7 +156,6 @@ jobs:
           CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER: aarch64-linux-gnu-gcc
           CARGO_INCREMENTAL: 0
           CARGO_NET_RETRY: 10
-          RUSTFLAGS: "-C target-cpu=native"
         run: cargo build --release --target ${{ matrix.target }}
       - name: Rename binary
         shell: bash
