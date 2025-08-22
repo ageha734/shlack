@@ -1,6 +1,6 @@
 [package]
 name = "shlack"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["ageha734 <contact@ageha734.jp>"]
 edition = "2021"
 description = "A Slack messaging client written in Rust"

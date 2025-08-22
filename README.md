@@ -1,6 +1,6 @@
 # Shlack
 
-[![CI/CD Pipeline](https://github.com/ageha734/shlack/actions/workflows/ci.yml/badge.svg)](https://github.com/ageha734/shlack/actions/workflows/ci.yml)
+[![CI/CD Pipeline](https://github.com/ageha734/shlack/actions/workflows/cicd.yml/badge.svg)](https://github.com/ageha734/shlack/actions/workflows/cicd.yml)
 [![Documentation](https://github.com/ageha734/shlack/actions/workflows/docs.yml/badge.svg)](https://ageha734.github.io/shlack/)
 
 A command line utility to pipe text into Slack messages, written in Rust.
