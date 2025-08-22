@@ -15,3 +15,7 @@ categories = ["command-line-utilities", "api-bindings"]
 [dependencies]
 argparse = "0.2.2"
 slack = "0.25.0"
+
+# OpenSSL with vendored feature for cross-compilation
+[target.'cfg(target_os = "linux")'.dependencies]
+openssl = { version = "0.10", features = ["vendored"] }

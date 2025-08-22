@@ -112,7 +112,7 @@ jobs:
       if: matrix.target == 'aarch64-unknown-linux-gnu'
       run: |
         sudo apt-get update
-        sudo apt-get install -y gcc-aarch64-linux-gnu
+        sudo apt-get install -y gcc-aarch64-linux-gnu libc6-dev-arm64-cross
 
     - name: Cache cargo registry
       uses: actions/cache@v4
@@ -127,6 +127,13 @@ jobs:
       run: cargo build --release --target ${{ matrix.target }}
       env:
         CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER: aarch64-linux-gnu-gcc
+        CC_aarch64_unknown_linux_gnu: aarch64-linux-gnu-gcc
+        AR_aarch64_unknown_linux_gnu: aarch64-linux-gnu-ar
+        CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_CC: aarch64-linux-gnu-gcc
+        CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_AR: aarch64-linux-gnu-ar
+        PKG_CONFIG_ALLOW_CROSS: 1
+        OPENSSL_STATIC: 1
+        OPENSSL_NO_VENDOR: 0
 
     - name: Upload artifacts
       uses: actions/upload-artifact@v4
