@@ -1,23 +1,62 @@
 #!/bin/bash
 
-# shlack installer script
-# Usage: curl -fsSL https://raw.githubusercontent.com/ageha734/shlack/master/install.sh | bash
-
 set -e
 
-# Colors for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
-NC='\033[0m' # No Color
+NC='\033[0m'
 
-# Configuration
 REPO="ageha734/shlack"
 BINARY_NAME="shlack"
-INSTALL_DIR="$HOME/.local/bin"
 
-# Functions
+determine_install_dir() {
+    local os_type
+    os_type=$(uname -s 2>/dev/null || echo "Unknown")
+
+    case "$os_type" in
+        CYGWIN*|MINGW*|MSYS*)
+            if [ -n "$USERPROFILE" ]; then
+                echo "$(cygpath -u "$USERPROFILE" 2>/dev/null || echo "$HOME")/bin"
+            elif [ -n "$HOME" ]; then
+                echo "$HOME/bin"
+            else
+                echo "/usr/local/bin"
+            fi
+            ;;
+        Darwin*)
+            if [ -w "/usr/local/bin" ] 2>/dev/null || [ "$(id -u 2>/dev/null || echo 1000)" -eq 0 ]; then
+                echo "/usr/local/bin"
+            elif [ -w "/opt/homebrew/bin" ] 2>/dev/null; then
+                echo "/opt/homebrew/bin"
+            elif [ -n "$HOME" ]; then
+                echo "$HOME/.local/bin"
+            else
+                echo "/usr/local/bin"
+            fi
+            ;;
+        Linux*|*BSD*|SunOS*|AIX*)
+            if [ -w "/usr/local/bin" ] 2>/dev/null || [ "$(id -u 2>/dev/null || echo 1000)" -eq 0 ]; then
+                echo "/usr/local/bin"
+            elif [ -n "$HOME" ]; then
+                echo "$HOME/.local/bin"
+            else
+                echo "/usr/local/bin"
+            fi
+            ;;
+        *)
+            if [ -n "$HOME" ]; then
+                echo "$HOME/.local/bin"
+            else
+                echo "/usr/local/bin"
+            fi
+            ;;
+    esac
+}
+
+INSTALL_DIR=$(determine_install_dir)
+
 log_info() {
     echo -e "${BLUE}[INFO]${NC} $1"
 }
@@ -34,11 +73,9 @@ log_error() {
     echo -e "${RED}[ERROR]${NC} $1"
 }
 
-# Detect OS and architecture
 detect_platform() {
     local os arch
 
-    # Detect OS
     case "$(uname -s)" in
         Linux*)     os="linux" ;;
         Darwin*)    os="macos" ;;
@@ -46,16 +83,13 @@ detect_platform() {
         *)          log_error "Unsupported operating system: $(uname -s)"; exit 1 ;;
     esac
 
-    # Detect architecture
     case "$(uname -m)" in
         x86_64|amd64)   arch="x86_64" ;;
         aarch64|arm64)  arch="aarch64" ;;
         *)              log_error "Unsupported architecture: $(uname -m)"; exit 1 ;;
     esac
 
-    # Set platform-specific variables
     if [ "$os" = "windows" ]; then
-        BINARY_NAME="${BINARY_NAME}.exe"
         ASSET_NAME="${BINARY_NAME%.*}-${os}-${arch}.exe"
     else
         ASSET_NAME="${BINARY_NAME}-${os}-${arch}"
@@ -64,7 +98,6 @@ detect_platform() {
     log_info "Detected platform: $os-$arch"
 }
 
-# Get latest release version
 get_latest_version() {
     log_info "Fetching latest release information..."
 
@@ -85,7 +118,6 @@ get_latest_version() {
     log_info "Latest version: $LATEST_VERSION"
 }
 
-# Download binary
 download_binary() {
     local download_url="https://github.com/$REPO/releases/download/$LATEST_VERSION/$ASSET_NAME"
     local temp_file="/tmp/$ASSET_NAME"
@@ -113,45 +145,137 @@ download_binary() {
     log_success "Binary downloaded successfully"
 }
 
-# Install binary
 install_binary() {
     local temp_file="/tmp/$ASSET_NAME"
+    local final_binary_name="$BINARY_NAME"
+    local os_type
+    os_type=$(uname -s 2>/dev/null || echo "Unknown")
 
-    # Create install directory if it doesn't exist
+    case "$os_type" in
+        CYGWIN*|MINGW*|MSYS*)
+            if ! echo "$final_binary_name" | grep -q "\.exe$"; then
+                final_binary_name="${BINARY_NAME}.exe"
+            fi
+            ;;
+    esac
+
     if [ ! -d "$INSTALL_DIR" ]; then
         log_info "Creating install directory: $INSTALL_DIR"
-        mkdir -p "$INSTALL_DIR"
+        mkdir -p "$INSTALL_DIR" || {
+            log_error "Failed to create install directory: $INSTALL_DIR"
+            exit 1
+        }
     fi
 
-    # Move binary to install directory
-    log_info "Installing binary to $INSTALL_DIR/$BINARY_NAME"
-    mv "$temp_file" "$INSTALL_DIR/$BINARY_NAME"
-    chmod +x "$INSTALL_DIR/$BINARY_NAME"
+    log_info "Installing binary to $INSTALL_DIR/$final_binary_name"
+
+    if ! cp "$temp_file" "$INSTALL_DIR/$final_binary_name"; then
+        log_error "Failed to install binary"
+        exit 1
+    fi
+
+    rm -f "$temp_file" 2>/dev/null || true
+
+    chmod +x "$INSTALL_DIR/$final_binary_name" 2>/dev/null || true
 
     log_success "Binary installed successfully"
 }
 
-# Check if install directory is in PATH
+detect_shell() {
+    local shell_name
+
+    if [ -n "$ZSH_VERSION" ]; then
+        echo "zsh"
+    elif [ -n "$BASH_VERSION" ]; then
+        echo "bash"
+    elif [ -n "$FISH_VERSION" ]; then
+        echo "fish"
+    elif [ -n "$0" ] && echo "$0" | grep -q "fish"; then
+        echo "fish"
+    elif [ -n "$SHELL" ]; then
+        basename "$SHELL"
+    else
+        echo "sh"
+    fi
+}
+
+get_shell_profile() {
+    local shell_type="$1"
+    local os_type
+    os_type=$(uname -s 2>/dev/null || echo "Unknown")
+
+    case "$shell_type" in
+        zsh)
+            if [ "$os_type" = "Darwin" ]; then
+                echo "$HOME/.zshrc"
+            else
+                echo "$HOME/.zshrc"
+            fi
+            ;;
+        bash)
+            if [ "$os_type" = "Darwin" ]; then
+                echo "$HOME/.bash_profile"
+            else
+                echo "$HOME/.bashrc"
+            fi
+            ;;
+        fish)
+            echo "$HOME/.config/fish/config.fish"
+            ;;
+        *)
+            echo "$HOME/.profile"
+            ;;
+    esac
+}
+
+get_path_export_command() {
+    local shell_type="$1"
+    local install_dir="$2"
+
+    case "$shell_type" in
+        fish)
+            echo "set -gx PATH \$PATH $install_dir"
+            ;;
+        *)
+            echo "export PATH=\"\$PATH:$install_dir\""
+            ;;
+    esac
+}
+
 check_path() {
+    local current_shell profile_file export_command
+
     if [[ ":$PATH:" != *":$INSTALL_DIR:"* ]]; then
         log_warning "Install directory $INSTALL_DIR is not in your PATH"
-        log_info "Add the following line to your shell profile (~/.bashrc, ~/.zshrc, etc.):"
-        echo "export PATH=\"\$PATH:$INSTALL_DIR\""
+
+        current_shell=$(detect_shell)
+        profile_file=$(get_shell_profile "$current_shell")
+        export_command=$(get_path_export_command "$current_shell" "$INSTALL_DIR")
+
+        log_info "Detected shell: $current_shell"
+        log_info "Add the following line to your shell profile ($profile_file):"
+        echo "$export_command"
         echo ""
+
+        log_info "Shell-specific instructions:"
+        echo "  Bash:       echo 'export PATH=\"\$PATH:$INSTALL_DIR\"' >> ~/.bashrc"
+        echo "  Zsh:        echo 'export PATH=\"\$PATH:$INSTALL_DIR\"' >> ~/.zshrc"
+        echo "  Fish:       echo 'set -gx PATH \$PATH $INSTALL_DIR' >> ~/.config/fish/config.fish"
+        echo "  PowerShell: Add '$INSTALL_DIR' to your PATH environment variable"
+        echo ""
+
         log_info "Or run the following command to add it temporarily:"
-        echo "export PATH=\"\$PATH:$INSTALL_DIR\""
+        echo "$export_command"
     else
         log_success "Install directory is already in your PATH"
     fi
 }
 
-# Verify installation
 verify_installation() {
     if [ -x "$INSTALL_DIR/$BINARY_NAME" ]; then
         log_success "Installation completed successfully!"
         log_info "You can now run: $BINARY_NAME"
 
-        # Try to run the binary to show version
         if [[ ":$PATH:" == *":$INSTALL_DIR:"* ]]; then
             log_info "Version information:"
             "$INSTALL_DIR/$BINARY_NAME" --help 2>/dev/null || true
@@ -162,7 +286,6 @@ verify_installation() {
     fi
 }
 
-# Main installation process
 main() {
     log_info "Starting shlack installation..."
     echo ""
@@ -183,5 +306,4 @@ main() {
     fi
 }
 
-# Run main function
 main "$@"
