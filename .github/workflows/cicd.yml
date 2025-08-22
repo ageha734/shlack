@@ -58,56 +58,24 @@ jobs:
       - name: Run tests
         run: cargo test --verbose
 
-  check_and_build:
-    name: Check Version & Build
-    runs-on: ${{ matrix.os }}
+  check_version:
+    name: Check Version
+    runs-on: ubuntu-latest
     needs: [lint, test]
     if: github.event_name == 'push' && github.ref == 'refs/heads/master'
     outputs:
       should_release: ${{ steps.check_tag.outputs.exists == 'false' }}
       version: ${{ steps.get_version.outputs.version }}
-    strategy:
-      matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
-        include:
-          - os: ubuntu-latest
-            target: x86_64-unknown-linux-gnu
-            artifact_name: shlack-linux-x86_64
-            binary_name: shlack
-          - os: ubuntu-latest
-            target: aarch64-unknown-linux-gnu
-            artifact_name: shlack-linux-aarch64
-            binary_name: shlack
-          - os: windows-latest
-            target: x86_64-pc-windows-msvc
-            artifact_name: shlack-windows-x86_64.exe
-            binary_name: shlack.exe
-          - os: windows-latest
-            target: aarch64-pc-windows-msvc
-            artifact_name: shlack-windows-aarch64.exe
-            binary_name: shlack.exe
-          - os: macos-latest
-            target: x86_64-apple-darwin
-            artifact_name: shlack-macos-x86_64
-            binary_name: shlack
-          - os: macos-latest
-            target: aarch64-apple-darwin
-            artifact_name: shlack-macos-aarch64
-            binary_name: shlack
     steps:
-      - name: Check version (run once)
-        if: matrix.os == 'ubuntu-latest'
-        id: check_version_steps
+      - name: Checkout code
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
       - id: get_version
-        if: matrix.os == 'ubuntu-latest'
         run: |
           VERSION=$(grep '^version = ' Cargo.toml | head -1 | sed 's/version = "\(.*\)"/\1/')
           echo "version=v$VERSION" >> $GITHUB_OUTPUT
       - id: check_tag
-        if: matrix.os == 'ubuntu-latest'
         run: |
           if git rev-parse "${{ steps.get_version.outputs.version }}" >/dev/null 2>&1; then
             echo "exists=true" >> $GITHUB_OUTPUT
@@ -115,35 +83,64 @@ jobs:
             echo "exists=false" >> $GITHUB_OUTPUT
           fi
 
-      - name: Build if new version
-        if: steps.check_tag.outputs.exists == 'false'
+  build:
+    name: Build
+    runs-on: ${{ matrix.os }}
+    needs: [check_version]
+    if: needs.check_version.outputs.should_release == 'true'
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+            artifact_name: shlack-linux-x86_64
+            binary_name: shlack-linux-x86_64
+          - os: ubuntu-latest
+            target: aarch64-unknown-linux-gnu
+            artifact_name: shlack-linux-aarch64
+            binary_name: shlack-linux-aarch64
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+            artifact_name: shlack-windows-x86_64.exe
+            binary_name: shlack-windows-x86_64.exe
+          - os: windows-latest
+            target: aarch64-pc-windows-msvc
+            artifact_name: shlack-windows-aarch64.exe
+            binary_name: shlack-windows-aarch64.exe
+          - os: macos-latest
+            target: x86_64-apple-darwin
+            artifact_name: shlack-macos-x86_64
+            binary_name: shlack-macos-x86_64
+          - os: macos-latest
+            target: aarch64-apple-darwin
+            artifact_name: shlack-macos-aarch64
+            binary_name: shlack-macos-aarch64
+    steps:
+      - name: Checkout code
         uses: actions/checkout@v4
-      - if: steps.check_tag.outputs.exists == 'false'
-        name: Install Rust
+      - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
         with:
           targets: ${{ matrix.target }}
-      - if: steps.check_tag.outputs.exists == 'false' && matrix.target == 'aarch64-unknown-linux-gnu'
+      - if: matrix.target == 'aarch64-unknown-linux-gnu'
         name: Install cross-compilation tools
         run: |
           sudo apt-get update
           sudo apt-get install -y gcc-aarch64-linux-gnu g++-aarch64-linux-gnu libc6-dev-arm64-cross
-      - if: steps.check_tag.outputs.exists == 'false' && matrix.target == 'aarch64-unknown-linux-gnu'
+      - if: matrix.target == 'aarch64-unknown-linux-gnu'
         name: Configure linker for aarch64
         run: |
           mkdir -p ~/.cargo
           echo '[target.aarch64-unknown-linux-gnu]' >> ~/.cargo/config.toml
           echo 'linker = "aarch64-linux-gnu-gcc"' >> ~/.cargo/config.toml
-      - if: steps.check_tag.outputs.exists == 'false'
-        name: Build release binary
+      - name: Build release binary
         env:
           CC_aarch64_unknown_linux_gnu: aarch64-linux-gnu-gcc
           CXX_aarch64_unknown_linux_gnu: aarch64-linux-gnu-g++
           AR_aarch64_unknown_linux_gnu: aarch64-linux-gnu-ar
           CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER: aarch64-linux-gnu-gcc
         run: cargo build --release --target ${{ matrix.target }}
-      - if: steps.check_tag.outputs.exists == 'false'
-        name: Upload Binary as Artifact
+      - name: Upload Binary as Artifact
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.artifact_name }}
@@ -152,8 +149,8 @@ jobs:
   publish_release:
     name: Publish Release
     runs-on: ubuntu-latest
-    needs: [check_and_build]
-    if: needs.check_and_build.outputs.should_release == 'true'
+    needs: [check_version, build]
+    if: needs.check_version.outputs.should_release == 'true'
     permissions:
       contents: write
     steps:
@@ -170,7 +167,7 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add CHANGELOG.md
-          git commit -m "chore: update CHANGELOG.md for ${{ needs.check_and_build.outputs.version }} [skip ci]"
+          git commit -m "chore: update CHANGELOG.md for ${{ needs.check_version.outputs.version }} [skip ci]"
           git push
       - name: Download all binaries
         uses: actions/download-artifact@v4
@@ -179,6 +176,6 @@ jobs:
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ needs.check_and_build.outputs.version }}
+          tag_name: ${{ needs.check_version.outputs.version }}
           body_path: "CHANGELOG.md"
           files: release-assets/*/*
